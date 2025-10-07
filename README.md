@@ -16,5 +16,8 @@ root agent
 
 ### Memory
 
-
-### TODO:
+### Tools
+- Root Agent:
+1. date time tools
+- Email Agent:
+1. Email MCP

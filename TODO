@@ -1,4 +1,5 @@
-[] Create simple root agent
+[X] Create simple root agent
+[X] Add current time tools
 [] Create simple email agent
 [] Connect to email mcp
 [] Make root agent prompt
