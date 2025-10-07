@@ -1,0 +1,13 @@
+[] Create simple root agent
+[] Create simple email agent
+[] Connect to email mcp
+[] Make root agent prompt
+[] Make email agent prompt
+[] Test agent
+[] Install postgreSQL (local)
+[] Make Backend (runner wrapper and else)
+[] Make Frontend using gradio
+[] Dockering
+[] Add personalization, design memory
+[] Tweak prompts
+[] 

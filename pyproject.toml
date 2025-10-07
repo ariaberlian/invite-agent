@@ -1,0 +1,12 @@
+[project]
+name = "invite-agent"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.118.0",
+    "google-adk>=1.15.1",
+    "gradio>=5.49.0",
+    "pydantic>=2.11.10",
+]
