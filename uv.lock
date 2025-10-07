@@ -1165,6 +1165,7 @@ dependencies = [
     { name = "google-adk" },
     { name = "gradio" },
     { name = "pydantic" },
+    { name = "python-dotenv" },
 ]
 
 [package.metadata]
@@ -1173,6 +1174,7 @@ requires-dist = [
     { name = "google-adk", specifier = ">=1.15.1" },
     { name = "gradio", specifier = ">=5.49.0" },
     { name = "pydantic", specifier = ">=2.11.10" },
+    { name = "python-dotenv", specifier = ">=1.1.1" },
 ]
 
 [[package]]
