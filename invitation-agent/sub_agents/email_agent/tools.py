@@ -5,7 +5,11 @@ from email.mime.multipart import MIMEMultipart
 from typing import List
 
 from dotenv import load_dotenv
+from ....utils.logger import setup_logger
+
 load_dotenv()
+
+logger = setup_logger(__name__)
 
 
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
@@ -31,6 +35,8 @@ def send_mail(receiver: List[str], subject: str, body: str) -> str:
     Returns:
         Success or error message
     """
+    logger.info("--- Tool Call: send_mail() ---")
+    logger.info(f"Sending email to {', '.join(receiver)} - Subject: '{subject}'")
     try:
         msg = MIMEMultipart()
         msg['From'] = EMAIL_HOST_USER
@@ -44,6 +50,8 @@ def send_mail(receiver: List[str], subject: str, body: str) -> str:
             server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
             server.send_message(msg)
 
+        logger.info(f"✓ Email sent successfully to {', '.join(receiver)}")
         return f"Email successfully sent to {', '.join(receiver)}"
     except Exception as e:
+        logger.error(f"Failed to send email: {type(e).__name__}: {str(e)}")
         return f"Failed to send email: {str(e)}"
