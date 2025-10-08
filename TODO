@@ -1,14 +1,16 @@
 [X] Create simple root agent
 [X] Add current time tools
-[] Create simple email agent
-[] Connect to email mcp
-[] Make root agent prompt
-[] Make email agent prompt
-[] Test agent
-[] Install postgreSQL (local)
-[] Make Backend (runner wrapper and else)
-[] Make Frontend using gradio
-[] Dockering
-[] Add personalization, design memory
-[] Tweak prompts
-[] Add guard/validation or something
+[x] Create simple email agent
+[x] Add send mail tool
+[x] Make root agent prompt
+[x] Make email agent prompt
+[x] Test agent
+[ ] Install postgreSQL (local)
+[ ] Make main.py (state, runner, session)
+[ ] Add auth
+[ ] Make Backend
+[ ] Make Frontend using gradio
+[ ] Dockering
+[ ] Add personalization, design memory
+[ ] Tweak prompts
+[ ] Add guard/validation or something
