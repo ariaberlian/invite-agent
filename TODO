@@ -17,6 +17,7 @@
 [x] Make Frontend using gradio
 [ ] Add auth
 [ ] Add session in frontend
+[ ] Centralize config, env
 [ ] Dockering
 [ ] Add personalization, design memory
 [ ] Tweak prompts
