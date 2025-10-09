@@ -15,3 +15,12 @@ class EmailModel(BaseModel):
     subject: str = ""
     body: str = ""
     recipients: list[str] = []
+
+class ChatRequest(BaseModel):
+    message: str
+    user_id: str = "budigalaksi123"
+    session_id: Optional[str] = None
+
+class ChatResponse(BaseModel):
+    response: str
+    session_id: str

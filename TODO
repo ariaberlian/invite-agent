@@ -8,14 +8,14 @@
 [x] Make main.py (state, runner, session)
 [x] Where we define state? How? Pydantic?
 [x] Create state management tools for invitation agent
-[ ] Create state management tools for email agent
+[x] Create state management tools for email agent
 [x] Update prompt using state
 [x] Test prompt
-[ ] Blackbox test to send email invitation
+[x] Blackbox test to send email invitation
 [ ] Install postgreSQL (local)
-[ ] Add auth
 [ ] Make Backend
 [ ] Make Frontend using gradio
+[ ] Add auth
 [ ] Dockering
 [ ] Add personalization, design memory
 [ ] Tweak prompts
@@ -24,4 +24,6 @@
 [ ] Add calendar tools
 [ ] Research imap/pop3 lib for read email reply
 [ ] Add RSVP management tools
+[ ] Release ver 1.1
 [ ] Try whatsapp bussiness mcp
+[ ] 
