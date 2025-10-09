@@ -28,7 +28,9 @@ email_agent = Agent(
     - Write a well-structured email body with:
         * Greetings
         * A clear and concise opening paragraphs
-        * Separate lines of agenda names, location, date and time, and notes.
+        * Separate lines of agenda names, location, date, time, and notes.
+        * Use (mmmm-dd-yyyy) (example: April 9, 2019) for english, and (dd-mmmm-yyyy) (example: 9 April 2019) for Indonesia.
+        * Use 24 hours system.
         * A paraghraphs of appropiate closing
         * User name as signature
     - Keep email concise but complete.
