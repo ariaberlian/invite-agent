@@ -1,4 +1,5 @@
 import logging
+import uvicorn
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -107,3 +108,6 @@ async def health():
     Health check endpoint
     """
     return {"status": "healthy"}
+
+if __name__ == "__main__":
+    uvicorn.run("backend:app", host="0.0.0.0", port=8000, reload=True)
