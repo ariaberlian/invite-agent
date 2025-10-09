@@ -1,12 +1,18 @@
-[X] Create simple root agent
-[X] Add current time tools
+[x] Create simple root agent
+[x] Add current time tools
 [x] Create simple email agent
 [x] Add send mail tool
 [x] Make root agent prompt
 [x] Make email agent prompt
 [x] Test agent
+[x] Make main.py (state, runner, session)
+[x] Where we define state? How? Pydantic?
+[x] Create state management tools for invitation agent
+[ ] Create state management tools for email agent
+[x] Update prompt using state
+[x] Test prompt
+[ ] Blackbox test to send email invitation
 [ ] Install postgreSQL (local)
-[ ] Make main.py (state, runner, session)
 [ ] Add auth
 [ ] Make Backend
 [ ] Make Frontend using gradio
@@ -14,3 +20,8 @@
 [ ] Add personalization, design memory
 [ ] Tweak prompts
 [ ] Add guard/validation or something
+[ ] Release ver 1.0
+[ ] Add calendar tools
+[ ] Research imap/pop3 lib for read email reply
+[ ] Add RSVP management tools
+[ ] Try whatsapp bussiness mcp

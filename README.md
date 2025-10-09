@@ -11,6 +11,7 @@ root agent
         |-> email agent
         |-> calendar agent
         |-> whatsapp agent
+        |-> invitation card generator agent
 
 ### Architecture
 

@@ -1,6 +1,6 @@
 from google.adk.agents.llm_agent import Agent
-from .tools import send_mail
-from ....utils.logger import setup_logger
+from .tools import send_mail, update_email_state, reset_email_state
+from utils.logger import setup_logger
 
 logger = setup_logger(__name__)
 
@@ -10,16 +10,16 @@ email_agent = Agent(
     description='An Email Agent to compose and send emails for invitation',
     instruction="""
     You are an Email Assistant Agent, sub agent of invitation_agent.
-    Your task is to generate and send invitation email based on information invitation_agent get.
+    Your task is to generate and send invitation email based on information in invitation_info.
+
 
     <invitation_info>
-    - Agenda's Name,
-    - Location,
-    - Date and Time,
-    - Notes,
-    - Recipients,
-    - Tone.
+    {invitation_info}
     </invitation_info>
+
+    <email>
+    {email}
+    </email>
 
     GUIDELINES:
     - Your ONLY task is to generate and send email.
@@ -34,10 +34,11 @@ email_agent = Agent(
         * Separate lines of agenda names, location, date and time, and notes.
         * A paraghraphs of appropiate closing
         * User name as signature
-    - Keep emails concise but complete.
-    - Ask for user confirmation of generated emails.
+    - Keep email concise but complete.
+    - Everytime email change happened, save to state with update_email_state tool.
+    - Ask for user confirmation of generated email.
     - Revise per user request until user confirm.
-    - After user's confirmed, send email using send_mail tool to every Recipients.
+    - After user's confirmed, send email using send_mail tool to every recipients.
     """,
-    tools=[send_mail],
+    tools=[send_mail, update_email_state, reset_email_state],
 )

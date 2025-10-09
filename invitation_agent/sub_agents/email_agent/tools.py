@@ -3,9 +3,11 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List
+from google.adk.tools.tool_context import ToolContext
 
 from dotenv import load_dotenv
-from ....utils.logger import setup_logger
+from utils.logger import setup_logger
+from shared.model import EmailModel
 
 load_dotenv()
 
@@ -35,8 +37,7 @@ def send_mail(receiver: List[str], subject: str, body: str) -> str:
     Returns:
         Success or error message
     """
-    logger.info("--- Tool Call: send_mail() ---")
-    logger.info(f"Sending email to {', '.join(receiver)} - Subject: '{subject}'")
+    logger.info(f"--- Tool: send_mail called for sending email to {', '.join(receiver)} - Subject: '{subject}'---")
     try:
         msg = MIMEMultipart()
         msg['From'] = EMAIL_HOST_USER
@@ -50,8 +51,48 @@ def send_mail(receiver: List[str], subject: str, body: str) -> str:
             server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
             server.send_message(msg)
 
-        logger.info(f"✓ Email sent successfully to {', '.join(receiver)}")
+        logger.info(f"Email sent successfully to {', '.join(receiver)}")
         return f"Email successfully sent to {', '.join(receiver)}"
     except Exception as e:
         logger.error(f"Failed to send email: {type(e).__name__}: {str(e)}")
         return f"Failed to send email: {str(e)}"
+
+def update_email_state(email: EmailModel, tool_context: ToolContext):
+    """Update email state.
+
+    Args:
+        email: 
+            subject: Subject line of the email
+            body: Body of the email
+            recipients: List of valid email address of recipients
+        tool_context: Context for accessing and updating session state.
+
+    Returns:
+        A confirmation message
+    """
+    logger.info(f"--- Tool: update_email_state called for {email} ---")
+    
+    tool_context.state["email"] = email
+
+    return {
+        "message": f"Updated email state: {email}"
+    }
+
+def reset_email_state(tool_context: ToolContext):
+    """Reset email in the state.
+    
+    Args:
+        tool_context: Context for accessing and updating session state.
+
+    Returns:
+        A confirmation message
+    """
+    logger.info(f"--- Tool: reset_email_state called ---")
+
+    empty_email = EmailModel()
+
+    tool_context.state["email"] = empty_email
+
+    return {
+        "message": f"Successfully reset email"
+    }
