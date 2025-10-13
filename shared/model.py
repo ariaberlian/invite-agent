@@ -1,8 +1,12 @@
 from pydantic import BaseModel, Field
 from typing import Optional
 
+class UserContext(BaseModel):
+    username: str = ""
+    full_name: str = ""
+    user_id: str = ""
+
 class InvitationInfo(BaseModel):
-    user_name: str = ""
     agenda_name: str = ""
     location: str = ""
     scheduled_at: Optional[str] = ""

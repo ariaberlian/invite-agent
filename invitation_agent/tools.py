@@ -21,10 +21,9 @@ def get_curent_datetime():
 
 def update_invitation_info(invitation_info: InvitationInfo, tool_context: ToolContext):
     """Update invitation info based on information from user.
-    
+
     Args:
         invitation_info: The information to be update, made of:
-            user_name: Name of user,
             agenda_name: Name of agenda,
             location: Agenda's location,
             scheduled_at: Agenda's date and time,
@@ -33,11 +32,15 @@ def update_invitation_info(invitation_info: InvitationInfo, tool_context: ToolCo
             tone: Tone to use when create email.
         tool_context: Context for accessing and updating session state.
 
+    Note:
+        User's full name is available in tool_context.state["user_context"]["full_name"]
+        User's login username is available in tool_context.state["user_context"]["username"]
+
     Returns:
         A confirmation message
     """
     logger.info(f"--- Tool: update_invitation_info called for {invitation_info} ---")
-    
+
     tool_context.state["invitation_info"] = invitation_info
 
     return {

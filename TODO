@@ -11,11 +11,11 @@
 [x] Create state management tools for email agent
 [x] Update prompt using state
 [x] Test prompt
-[ ] Blackbox test to send email invitation: Password expire
+[x] Blackbox test to send email invitation: Password expire
 [x] Install postgreSQL (local)
 [x] Make Backend
 [x] Make Frontend using gradio
-[ ] Add auth
+[x] Add auth
 [ ] Add session in frontend
 [ ] Centralize config, env
 [ ] Dockering
