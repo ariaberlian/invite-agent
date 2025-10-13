@@ -12,7 +12,7 @@
 [x] Update prompt using state
 [x] Test prompt
 [ ] Blackbox test to send email invitation: Password expire
-[ ] Install postgreSQL (local)
+[x] Install postgreSQL (local)
 [x] Make Backend
 [x] Make Frontend using gradio
 [ ] Add auth
@@ -28,4 +28,3 @@
 [ ] Add RSVP management tools
 [ ] Release ver 1.1
 [ ] Try whatsapp bussiness mcp
-[ ] 

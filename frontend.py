@@ -72,8 +72,19 @@ def check_backend_health() -> str:
     except Exception as e:
         return f"🔴 Backend is not reachable: {str(e)}"
 
+js_func = """
+function refresh() {
+    const url = new URL(window.location);
+
+    if (url.searchParams.get('__theme') !== 'dark') {
+        url.searchParams.set('__theme', 'dark');
+        window.location.href = url.href;
+    }
+}
+"""
+
 # Create Gradio interface
-with gr.Blocks(title="Invitation Assistant", theme=gr.themes.Soft()) as demo:
+with gr.Blocks(title="Invitation Assistant", theme=gr.themes.Soft(), js=js_func) as demo:
     gr.Markdown(
         """
         # 📧 Invitation Assistant
@@ -102,7 +113,8 @@ with gr.Blocks(title="Invitation Assistant", theme=gr.themes.Soft()) as demo:
         label="Chat with Invitation Assistant",
         height=500,
         show_label=True,
-        bubble_full_width=False
+        autoscroll=True,
+        type='messages',
     )
 
     with gr.Row():
@@ -117,18 +129,6 @@ with gr.Blocks(title="Invitation Assistant", theme=gr.themes.Soft()) as demo:
     with gr.Row():
         clear_btn = gr.Button("🗑️ Clear Chat")
         new_conv_btn = gr.Button("🆕 New Conversation", variant="secondary")
-
-    # Example prompts
-    gr.Examples(
-        examples=[
-            "I want to create an invitation for a team meeting next Monday at 2 PM",
-            "Help me invite people to my birthday party on December 25th",
-            "Create a formal invitation for a business conference",
-            "I need to send invites for a virtual workshop",
-        ],
-        inputs=msg,
-        label="Example Prompts"
-    )
 
     # Session info (hidden, for debugging)
     with gr.Accordion("Session Info (Debug)", open=False):
@@ -170,6 +170,8 @@ with gr.Blocks(title="Invitation Assistant", theme=gr.themes.Soft()) as demo:
         fn=check_backend_health,
         outputs=health_status
     )
+
+    demo.css="footer {visibility: hidden}"
 
 if __name__ == "__main__":
     print("Starting Invitation Assistant Frontend...")

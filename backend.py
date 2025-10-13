@@ -1,10 +1,11 @@
+import os
 import logging
 import uvicorn
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
+from google.adk.sessions import DatabaseSessionService
 from invitation_agent.agent import invitation_agent
 
 from shared.model import EmailModel, InvitationInfo, ChatRequest, ChatResponse
@@ -15,7 +16,9 @@ logger = setup_logger(__name__, logging.INFO)
 
 load_dotenv()
 
-session_service = InMemorySessionService()
+DB_URL = os.getenv("DB_URL", "")
+
+session_service = DatabaseSessionService(db_url=DB_URL)
 
 APP_NAME = "Invitation Assistant"
 USER_ID = "budigalaksi123"
@@ -24,8 +27,8 @@ invitation_info_init = InvitationInfo()
 email_init = EmailModel()
 
 initial_state = {
-    "invitation_info": invitation_info_init,
-    "email" : email_init,
+    "invitation_info": invitation_info_init.model_dump(),
+    "email": email_init.model_dump(),
 }
 
 # Store runner globally
@@ -110,4 +113,4 @@ async def health():
     return {"status": "healthy"}
 
 if __name__ == "__main__":
-    uvicorn.run("backend:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("backend:app", host="0.0.0.0", port=8000)

@@ -59,7 +59,7 @@ def reset_invitation_info(tool_context: ToolContext):
 
     empty_invitation_info = InvitationInfo()
 
-    tool_context.state["invitation_info"] = empty_invitation_info
+    tool_context.state["invitation_info"] = empty_invitation_info.model_dump()
 
     return {
         "message": f"Successfully reset invitation info"

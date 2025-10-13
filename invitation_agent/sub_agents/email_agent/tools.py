@@ -91,7 +91,7 @@ def reset_email_state(tool_context: ToolContext):
 
     empty_email = EmailModel()
 
-    tool_context.state["email"] = empty_email
+    tool_context.state["email"] = empty_email.model_dump()
 
     return {
         "message": f"Successfully reset email"

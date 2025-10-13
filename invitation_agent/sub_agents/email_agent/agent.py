@@ -25,6 +25,7 @@ email_agent = Agent(
     - Use <invitation_info> to generate email.
     - Create subject and body email vibe based on Tone.
     - Create appropiate subject line (concise and relevant).
+    - WRITE EMAIL in EMAIL SUPPORTED FORMAT.
     - Write a well-structured email body with:
         * Greetings
         * A clear and concise opening paragraphs
