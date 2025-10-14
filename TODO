@@ -22,8 +22,6 @@
 [x] Tweak prompts
 [x] Add guard/validation or something
 [x] Release ver 1.0
-[ ] Add calendar tools
-[ ] Research imap/pop3 lib for read email reply
-[ ] Add RSVP management tools
-[ ] Release ver 1.1
+[x] Add calendar tools
+[x] Release ver 1.1
 [ ] Try whatsapp bussiness mcp
