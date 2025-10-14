@@ -1,6 +1,11 @@
 import gradio as gr
 import requests
+import logging
 from typing import Optional, Tuple
+from datetime import datetime
+
+# Setup logger
+logger = logging.getLogger(__name__)
 
 # Backend configuration
 BACKEND_URL = "http://localhost:8000"
@@ -91,7 +96,7 @@ def logout_user():
     auth_state["token"] = None
     auth_state["user"] = None
     auth_state["session_id"] = None
-    return [], "", "Logged out successfully"
+    return []
 
 def chat_with_agent(message: str, history: list) -> Tuple[list, str]:
     """Send message to backend with authentication"""
@@ -141,29 +146,100 @@ def chat_with_agent(message: str, history: list) -> Tuple[list, str]:
 
     return history, ""
 
-def reset_conversation():
-    """Reset conversation"""
-    auth_state["session_id"] = None
-    return [], ""
+def load_sessions() -> list:
+    """Load all sessions for the authenticated user"""
+    if not auth_state["token"]:
+        return []
 
-def check_backend_health() -> str:
-    """Check backend health"""
     try:
-        response = requests.get(f"{BACKEND_URL}/health", timeout=5)
+        response = requests.get(
+            f"{BACKEND_URL}/sessions",
+            headers={"Authorization": f"Bearer {auth_state['token']}"},
+            timeout=10
+        )
+
         if response.status_code == 200:
-            return "🟢 Backend is healthy"
+            data = response.json()
+            sessions = data.get("sessions", [])
+            return sessions
         else:
-            return f"🔴 Backend returned status {response.status_code}"
+            return []
+
     except Exception as e:
-        return f"🔴 Backend is not reachable: {str(e)}"
+        logger.error(f"Error loading sessions: {str(e)}")
+        return []
+
+def load_chat_history(session_id: str) -> list:
+    """Load chat history for a specific session"""
+    if not auth_state["token"] or not session_id:
+        return []
+
+    try:
+        response = requests.get(
+            f"{BACKEND_URL}/sessions/{session_id}/history",
+            headers={"Authorization": f"Bearer {auth_state['token']}"},
+            timeout=10
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            messages = data.get("messages", [])
+
+            # Convert messages to the format expected by Gradio chatbot
+            history = []
+            for msg in messages:
+                history.append({
+                    "role": msg["role"],
+                    "content": msg["content"]
+                })
+
+            return history
+        else:
+            logger.error(f"Failed to load chat history: {response.status_code}")
+            return []
+
+    except Exception as e:
+        logger.error(f"Error loading chat history: {str(e)}")
+        return []
+
+def delete_session(session_id: str) -> bool:
+    """Delete a specific session"""
+    if not auth_state["token"] or not session_id:
+        return False
+
+    try:
+        response = requests.delete(
+            f"{BACKEND_URL}/sessions/{session_id}",
+            headers={"Authorization": f"Bearer {auth_state['token']}"},
+            timeout=10
+        )
+        return response.status_code == 200
+    except Exception as e:
+        logger.error(f"Error deleting session: {str(e)}")
+        return False
+
+def format_session_for_display(session):
+    """Format a single session for display"""
+    preview = session.get("preview") or "New conversation"
+    created_at = session.get("created_at", "")
+
+    try:
+        dt = datetime.fromisoformat(str(created_at).replace('Z', '+00:00'))
+        time_str = dt.strftime("%b %d, %H:%M")
+    except:
+        time_str = ""
+
+    return f"{preview[:35]}\n{time_str}"
 
 # Create Gradio interface
 with gr.Blocks(title="Invitation Assistant", theme=gr.themes.Soft()) as demo:
 
-    # Login/Register Section (visible by default)
+    # State
+    sessions_state = gr.State([])
+
+    # Login/Register Section
     with gr.Column(visible=True) as auth_section:
         with gr.Tabs():
-            # Login Tab
             with gr.Tab("Login"):
                 gr.Markdown("# 🔐 Login")
                 login_username = gr.Textbox(label="Username", placeholder="Enter username")
@@ -171,7 +247,6 @@ with gr.Blocks(title="Invitation Assistant", theme=gr.themes.Soft()) as demo:
                 login_button = gr.Button("Login", variant="primary")
                 login_message = gr.Textbox(label="Status", interactive=False)
 
-            # Register Tab
             with gr.Tab("Register"):
                 gr.Markdown("# 📝 Create Account")
                 reg_username = gr.Textbox(label="Username", placeholder="Enter username")
@@ -182,60 +257,46 @@ with gr.Blocks(title="Invitation Assistant", theme=gr.themes.Soft()) as demo:
                 reg_button = gr.Button("Register", variant="primary")
                 reg_message = gr.Textbox(label="Status", interactive=False)
 
-    # Chat Section (hidden until login)
-    with gr.Column(visible=False) as chat_section:
-        # User info header
-        with gr.Row():
-            user_info = gr.Markdown("", visible=False)
-            logout_button = gr.Button("🚪 Logout", variant="secondary", scale=0)
+    # Chat Section with Sidebar
+    with gr.Row(visible=False) as chat_section:
+        # Sidebar
+        with gr.Column(scale=1, min_width=250):
+            gr.Markdown("## 📧 Chats")
+            user_info = gr.Markdown("")
 
-        gr.Markdown(
-            """
-            # 📧 Invitation Assistant
+            new_chat_btn = gr.Button("➕ New Chat", variant="primary")
+            refresh_sessions_btn = gr.Button("🔄 Refresh", size="sm")
 
-            Your AI-powered assistant for creating and managing event invitations.
+            gr.Markdown("---")
 
-            **How to use:**
-            1. Start a conversation by describing your invitation needs
-            2. The assistant will help you create invitations and send emails
-            3. Use the "New Conversation" button to start fresh
-            """
-        )
-
-        # Health status
-        with gr.Row():
-            health_status = gr.Textbox(
-                label="Backend Status",
-                value=check_backend_health(),
-                interactive=False,
-                scale=3
+            # Sessions list as radio buttons
+            sessions_radio = gr.Radio(
+                choices=[],
+                label="Conversations",
+                interactive=True
             )
-            refresh_btn = gr.Button("🔄 Refresh", scale=1)
 
-        # Chat interface
-        chatbot = gr.Chatbot(
-            label="Chat with Invitation Assistant",
-            height=500,
-            show_label=True,
-            autoscroll=True,
-            type='messages',
-        )
+            delete_session_btn = gr.Button("🗑️ Delete Selected", size="sm", variant="stop")
 
-        with gr.Row():
-            msg = gr.Textbox(
-                label="Your message",
-                placeholder="Type your message here...",
-                lines=2,
-                scale=4
+            gr.Markdown("---")
+            logout_button = gr.Button("🚪 Logout", size="sm")
+
+        # Main Chat Area
+        with gr.Column(scale=3):
+            chatbot = gr.Chatbot(
+                label="Invitation Assistant",
+                height=600,
+                type='messages'
             )
-            send_btn = gr.Button("Send", variant="primary", scale=1)
 
-        with gr.Row():
-            clear_btn = gr.Button("🗑️ Clear Chat")
-            new_conv_btn = gr.Button("🆕 New Conversation", variant="secondary")
-
-    # Hidden state to manage tab visibility
-    chat_visible = gr.State(False)
+            with gr.Row():
+                msg = gr.Textbox(
+                    label="Message",
+                    placeholder="Type your message here...",
+                    lines=2,
+                    scale=4
+                )
+                send_btn = gr.Button("Send", variant="primary", scale=1)
 
     # Register handler
     def handle_register(username, full_name, email, password, confirm_password):
@@ -253,71 +314,135 @@ with gr.Blocks(title="Invitation Assistant", theme=gr.themes.Soft()) as demo:
         msg, success, user_data = login_user(username, password)
 
         if success:
-            user_display = f"👤 **{user_data['full_name']}** (@{user_data['username']})"
-            # Hide auth section, show chat section
+            sessions = load_sessions()
+            session_choices = [(format_session_for_display(s), s['session_id']) for s in sessions]
+            user_display = f"**{user_data['full_name']}**\n@{user_data['username']}"
+
             return (
-                msg,  # login_message
+                msg,
                 gr.update(visible=False),  # auth_section
                 gr.update(visible=True),   # chat_section
-                gr.update(value=user_display, visible=True),  # user_info
+                user_display,
+                sessions,
+                gr.update(choices=session_choices, value=None)
             )
         else:
             return (
-                msg,  # login_message
-                gr.update(visible=True),   # auth_section
-                gr.update(visible=False),  # chat_section
-                gr.update(visible=False),  # user_info
+                msg,
+                gr.update(visible=True),
+                gr.update(visible=False),
+                "",
+                [],
+                gr.update(choices=[])
             )
 
     login_button.click(
         fn=handle_login,
         inputs=[login_username, login_password],
-        outputs=[login_message, auth_section, chat_section, user_info]
+        outputs=[login_message, auth_section, chat_section, user_info, sessions_state, sessions_radio]
     )
 
     # Logout handler
     def handle_logout():
-        chatbot_clear, msg_clear, logout_msg = logout_user()
+        logout_user()
         return (
-            logout_msg,  # login_message
-            gr.update(visible=True),   # auth_section
-            gr.update(visible=False),  # chat_section
-            gr.update(visible=False),  # user_info
-            chatbot_clear,  # chatbot
-            msg_clear,  # msg
+            "Logged out",
+            gr.update(visible=True),
+            gr.update(visible=False),
+            "",
+            [],
+            [],
+            gr.update(choices=[])
         )
 
     logout_button.click(
         fn=handle_logout,
-        outputs=[login_message, auth_section, chat_section, user_info, chatbot, msg]
+        outputs=[login_message, auth_section, chat_section, user_info, chatbot, sessions_state, sessions_radio]
+    )
+
+    # New chat handler
+    def handle_new_chat():
+        auth_state["session_id"] = None
+        return [], ""
+
+    new_chat_btn.click(
+        fn=handle_new_chat,
+        outputs=[chatbot, msg]
+    )
+
+    # Refresh sessions handler
+    def handle_refresh_sessions(current_sessions):
+        sessions = load_sessions()
+        session_choices = [(format_session_for_display(s), s['session_id']) for s in sessions]
+        return sessions, gr.update(choices=session_choices, value=None)
+
+    refresh_sessions_btn.click(
+        fn=handle_refresh_sessions,
+        inputs=[sessions_state],
+        outputs=[sessions_state, sessions_radio]
+    )
+
+    # Load session when selected
+    def handle_session_select(session_id, sessions):
+        if session_id:
+            auth_state["session_id"] = session_id
+            # Load chat history from the backend
+            history = load_chat_history(session_id)
+            return history, ""
+        return [], ""
+
+    sessions_radio.change(
+        fn=handle_session_select,
+        inputs=[sessions_radio, sessions_state],
+        outputs=[chatbot, msg]
+    )
+
+    # Delete session handler
+    def handle_delete_session(selected_session, sessions):
+        if not selected_session:
+            return sessions, gr.update(choices=[(format_session_for_display(s), s['session_id']) for s in sessions], value=None), []
+
+        success = delete_session(selected_session)
+        if success:
+            # Refresh sessions
+            new_sessions = load_sessions()
+            session_choices = [(format_session_for_display(s), s['session_id']) for s in new_sessions]
+
+            # Clear chat if deleted session was active
+            if auth_state.get("session_id") == selected_session:
+                auth_state["session_id"] = None
+                return new_sessions, gr.update(choices=session_choices, value=None), []
+
+            return new_sessions, gr.update(choices=session_choices, value=None), []
+
+        return sessions, gr.update(), []
+
+    delete_session_btn.click(
+        fn=handle_delete_session,
+        inputs=[sessions_radio, sessions_state],
+        outputs=[sessions_state, sessions_radio, chatbot]
     )
 
     # Chat handlers
+    def handle_chat(message, history, sessions):
+        new_history, _ = chat_with_agent(message, history)
+
+        # Refresh sessions to show new/updated session
+        new_sessions = load_sessions()
+        session_choices = [(format_session_for_display(s), s['session_id']) for s in new_sessions]
+
+        return new_history, "", new_sessions, gr.update(choices=session_choices)
+
     msg.submit(
-        fn=chat_with_agent,
-        inputs=[msg, chatbot],
-        outputs=[chatbot, msg]
+        fn=handle_chat,
+        inputs=[msg, chatbot, sessions_state],
+        outputs=[chatbot, msg, sessions_state, sessions_radio]
     )
 
     send_btn.click(
-        fn=chat_with_agent,
-        inputs=[msg, chatbot],
-        outputs=[chatbot, msg]
-    )
-
-    clear_btn.click(
-        fn=lambda: ([], ""),
-        outputs=[chatbot, msg]
-    )
-
-    new_conv_btn.click(
-        fn=reset_conversation,
-        outputs=[chatbot, msg]
-    )
-
-    refresh_btn.click(
-        fn=check_backend_health,
-        outputs=health_status
+        fn=handle_chat,
+        inputs=[msg, chatbot, sessions_state],
+        outputs=[chatbot, msg, sessions_state, sessions_radio]
     )
 
     demo.css = "footer {visibility: hidden}"

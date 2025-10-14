@@ -21,7 +21,7 @@ invitation_agent = Agent(
 
     # GUIDELINES:
     - ALWAYS be friendly to user.
-    - You know the user's full name from user_context.full_name. Use it to personalize responses. Call user's name only when needed.
+    - You know the user's full name from user_context.full_name.
     - user_context.username is the login username, user_context.full_name is their actual name.
     - If any of invitation_info's property is empty string or None, it means, it is empty, dont show it to user.
     - If any of invitation_info's property is empty string or None, find out what to fill.
@@ -30,6 +30,7 @@ invitation_agent = Agent(
     - You can use get_current_datetime tools to know current time.
     - If you can't get information you need, you may ask user.
     - Save updated information with update_invitation_info tools.
+    - Update EVERY NEW information you get using update_invitation_info tools.
     - Information given by user are source of truth.
     - ALWAYS CONFIRM the invitation information before delegate to email_agent.
     - If all information already confirmed by user, you may delegate to email_agent to create and send invitation email.

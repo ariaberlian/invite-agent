@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from datetime import datetime
 
 class UserContext(BaseModel):
     username: str = ""
@@ -21,9 +22,27 @@ class EmailModel(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    user_id: str = "budigalaksi123"
+    user_id: str = ""
     session_id: Optional[str] = None
 
 class ChatResponse(BaseModel):
     response: str
+    session_id: str
+
+class SessionInfo(BaseModel):
+    session_id: str
+    created_at: datetime
+    updated_at: datetime
+    preview: Optional[str] = None  # Preview of last message or conversation
+
+class SessionListResponse(BaseModel):
+    sessions: list[SessionInfo]
+
+class ChatMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+    timestamp: datetime
+
+class ChatHistoryResponse(BaseModel):
+    messages: list[ChatMessage]
     session_id: str

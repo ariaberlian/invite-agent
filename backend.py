@@ -8,14 +8,14 @@ from google.adk.runners import Runner
 from google.adk.sessions import DatabaseSessionService
 from invitation_agent.agent import invitation_agent
 
-from shared.model import EmailModel, InvitationInfo, ChatRequest, ChatResponse, UserContext
+from shared.model import EmailModel, InvitationInfo, ChatRequest, ChatResponse, UserContext, SessionInfo, SessionListResponse, ChatMessage, ChatHistoryResponse
 from utils.logger import setup_logger
 from utils.utils import call_agent_async
 from auth.models import UserCreate, UserLogin, Token, User
 from auth.database import UserDatabase
 from auth.security import create_access_token
 from auth.dependencies import get_current_user
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 logger = setup_logger(__name__, logging.INFO)
 
@@ -230,6 +230,189 @@ async def chat(request: ChatRequest, current_user: str = Depends(get_current_use
     except Exception as e:
         logger.error(f"Error processing chat request: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+
+@app.get("/sessions", response_model=SessionListResponse)
+async def get_user_sessions(current_user: str = Depends(get_current_user)):
+    """
+    Get all sessions for the authenticated user
+    """
+    if not user_db or not user_db.pool:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+
+    try:
+        # Query sessions directly from the database using user_db connection
+        async with user_db.pool.acquire() as conn:
+            # First, check what columns exist in the sessions table
+            try:
+                rows = await conn.fetch('''
+                    SELECT id, create_time, update_time, state
+                    FROM sessions
+                    WHERE app_name = $1 AND user_id = $2
+                    ORDER BY update_time DESC
+                ''', APP_NAME, current_user)
+            except Exception as e:
+                # If timestamp columns don't exist, try without them
+                logger.warning(f"Timestamp columns not found, trying alternative query: {str(e)}")
+                rows = await conn.fetch('''
+                    SELECT id, state
+                    FROM sessions
+                    WHERE app_name = $1 AND user_id = $2
+                    ORDER BY id DESC
+                ''', APP_NAME, current_user)
+
+            sessions = []
+            for row in rows:
+                # Try to extract preview from state
+                preview = None
+                if row['state']:
+                    # State is a dict, try to get invitation info or first message
+                    state = row['state']
+                    if isinstance(state, dict):
+                        invitation_info = state.get('invitation_info', {})
+                        if invitation_info and invitation_info.get('agenda_name'):
+                            preview = invitation_info.get('agenda_name')
+                            
+
+                created_at = row.get('create_time', datetime.now())
+                updated_at = row.get('update_time', datetime.now())
+
+                sessions.append(SessionInfo(
+                    session_id=row['id'],
+                    created_at=created_at,
+                    updated_at=updated_at,
+                    preview=preview
+                ))
+
+            logger.info(f"Retrieved {len(sessions)} sessions for user: {current_user}")
+            return SessionListResponse(sessions=sessions)
+
+    except Exception as e:
+        logger.error(f"Error fetching sessions: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching sessions: {str(e)}"
+        )
+
+@app.get("/sessions/{session_id}/history", response_model=ChatHistoryResponse)
+async def get_session_history(session_id: str, current_user: str = Depends(get_current_user)):
+    """
+    Get chat history for a specific session
+    """
+    if not user_db or not user_db.pool:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+
+    try:
+        async with user_db.pool.acquire() as conn:
+            # Verify the session belongs to the user
+            session = await conn.fetchrow('''
+                SELECT id FROM sessions
+                WHERE id = $1 AND app_name = $2 AND user_id = $3
+            ''', session_id, APP_NAME, current_user)
+
+            if not session:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Session not found or access denied"
+                )
+
+            # Fetch events for this session
+            events = await conn.fetch('''
+                SELECT author, timestamp, content
+                FROM events
+                WHERE session_id = $1
+                  AND app_name = $2
+                  AND user_id = $3
+                  AND content IS NOT NULL
+                  AND content::text != 'null'
+                ORDER BY timestamp ASC
+            ''', session_id, APP_NAME, current_user)
+
+            messages = []
+            for event in events:
+                author = event['author']
+                timestamp = event['timestamp']
+                content = event['content']
+
+                # Parse content (it's stored as JSONB)
+                if isinstance(content, str):
+                    import json
+                    try:
+                        content = json.loads(content)
+                    except:
+                        continue
+
+                # Extract text from parts
+                if isinstance(content, dict):
+                    role = content.get('role', '')
+                    # Map role to our format
+                    if role == 'user' or author == 'user':
+                        message_role = 'user'
+                    else:
+                        message_role = 'assistant'
+
+                    parts = content.get('parts', [])
+                    for part in parts:
+                        if isinstance(part, dict) and 'text' in part:
+                            text = part['text']
+                            if text:  # Only add non-empty messages
+                                messages.append(ChatMessage(
+                                    role=message_role,
+                                    content=text,
+                                    timestamp=timestamp
+                                ))
+
+            logger.info(f"Retrieved {len(messages)} messages for session {session_id}")
+            return ChatHistoryResponse(messages=messages, session_id=session_id)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching chat history: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching chat history: {str(e)}"
+        )
+
+@app.delete("/sessions/{session_id}")
+async def delete_session(session_id: str, current_user: str = Depends(get_current_user)):
+    """
+    Delete a specific session for the authenticated user
+    """
+    if not user_db or not user_db.pool:
+        raise HTTPException(status_code=503, detail="Database not initialized")
+
+    try:
+        # Verify the session belongs to the user before deleting using user_db connection
+        async with user_db.pool.acquire() as conn:
+            # Check if session exists and belongs to user
+            session = await conn.fetchrow('''
+                SELECT id FROM sessions
+                WHERE id = $1 AND app_name = $2 AND user_id = $3
+            ''', session_id, APP_NAME, current_user)
+
+            if not session:
+                raise HTTPException(
+                    status_code=404,
+                    detail="Session not found or access denied"
+                )
+
+            # Delete the session
+            await conn.execute('''
+                DELETE FROM sessions
+                WHERE id = $1 AND app_name = $2 AND user_id = $3
+            ''', session_id, APP_NAME, current_user)
+
+            logger.info(f"Deleted session {session_id} for user: {current_user}")
+            return {"message": "Session deleted successfully", "session_id": session_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting session: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting session: {str(e)}"
+        )
 
 @app.get("/health")
 async def health():
