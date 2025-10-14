@@ -18,11 +18,10 @@
 [x] Add auth
 [x] Add session in frontend
 [x] Centralize config, env
-[ ] Dockering
-[ ] Add personalization, design memory
-[ ] Tweak prompts
-[ ] Add guard/validation or something
-[ ] Release ver 1.0
+[x] Add personalization, design memory
+[x] Tweak prompts
+[x] Add guard/validation or something
+[x] Release ver 1.0
 [ ] Add calendar tools
 [ ] Research imap/pop3 lib for read email reply
 [ ] Add RSVP management tools
