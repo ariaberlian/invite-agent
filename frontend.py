@@ -3,12 +3,13 @@ import requests
 import logging
 from typing import Optional, Tuple
 from datetime import datetime
+from config import config
 
 # Setup logger
 logger = logging.getLogger(__name__)
 
 # Backend configuration
-BACKEND_URL = "http://localhost:8000"
+BACKEND_URL = config.frontend.BACKEND_URL
 
 # Global state for authentication and session
 auth_state = {
@@ -451,7 +452,7 @@ if __name__ == "__main__":
     print("Starting Invitation Assistant Frontend...")
     print(f"Backend URL: {BACKEND_URL}")
     demo.launch(
-        server_name="0.0.0.0",
-        server_port=8001,
-        share=False
+        server_name=config.frontend.HOST,
+        server_port=config.frontend.PORT,
+        share=config.frontend.SHARE
     )

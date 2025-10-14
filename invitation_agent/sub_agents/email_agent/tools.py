@@ -1,29 +1,22 @@
-import os
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import List
 from google.adk.tools.tool_context import ToolContext
 
-from dotenv import load_dotenv
+from config import config
 from utils.logger import setup_logger
 from shared.model import EmailModel
 
-load_dotenv()
-
 logger = setup_logger(__name__)
 
+# Validate email configuration on import
+config.email.validate()
 
-EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
-if EMAIL_HOST_USER is None:
-    raise ValueError("EMAIL_HOST_USER is not set")
-
-EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
-if EMAIL_HOST_PASSWORD is None:
-    raise ValueError("EMAIL_HOST_PASSWORD is not set")
-
-SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+EMAIL_HOST_USER = config.email.EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = config.email.EMAIL_HOST_PASSWORD
+SMTP_SERVER = config.email.SMTP_SERVER
+SMTP_PORT = config.email.SMTP_PORT
 
 def send_mail(receiver: List[str], subject: str, body: str) -> str:
     """

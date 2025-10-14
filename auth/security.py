@@ -2,7 +2,7 @@ from passlib.context import CryptContext
 from datetime import datetime, timedelta
 from typing import Optional
 import jwt
-import os
+from config import config
 
 # Password hashing
 pwd_context = CryptContext(
@@ -13,9 +13,9 @@ pwd_context = CryptContext(
 )
 
 # JWT settings
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-this-in-production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+SECRET_KEY = config.auth.SECRET_KEY
+ALGORITHM = config.auth.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = config.auth.ACCESS_TOKEN_EXPIRE_MINUTES
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""

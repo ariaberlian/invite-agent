@@ -1,8 +1,6 @@
-import os
 import logging
 import uvicorn
 from contextlib import asynccontextmanager
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Depends, status
 from google.adk.runners import Runner
 from google.adk.sessions import DatabaseSessionService
@@ -16,17 +14,14 @@ from auth.database import UserDatabase
 from auth.security import create_access_token
 from auth.dependencies import get_current_user
 from datetime import timedelta, datetime
+from config import config
 
-logger = setup_logger(__name__, logging.INFO)
+logger = setup_logger(__name__, logging.DEBUG)
 
-load_dotenv()
+session_service = DatabaseSessionService(db_url=config.DB_URL)
+user_db = UserDatabase(db_url=config.DB_URL)
 
-DB_URL = os.getenv("DB_URL", "")
-
-session_service = DatabaseSessionService(db_url=DB_URL)
-user_db = UserDatabase(db_url=DB_URL)
-
-APP_NAME = "Invitation Assistant"
+APP_NAME = config.APP_NAME
 
 def create_initial_state(user_context: UserContext) -> dict:
     """Create initial state with user context"""
@@ -264,15 +259,25 @@ async def get_user_sessions(current_user: str = Depends(get_current_user)):
             for row in rows:
                 # Try to extract preview from state
                 preview = None
+
                 if row['state']:
-                    # State is a dict, try to get invitation info or first message
+                    # State might be a JSON string or dict
                     state = row['state']
-                    if isinstance(state, dict):
+
+                    # If state is a string, parse it as JSON
+                    if isinstance(state, str):
+                        import json
+                        try:
+                            state = json.loads(state)
+                        except json.JSONDecodeError:
+                            logger.warning(f"Failed to parse state as JSON: {state}")
+                            state = None
+
+                    if state and isinstance(state, dict):
                         invitation_info = state.get('invitation_info', {})
                         if invitation_info and invitation_info.get('agenda_name'):
                             preview = invitation_info.get('agenda_name')
-                            
-
+                
                 created_at = row.get('create_time', datetime.now())
                 updated_at = row.get('update_time', datetime.now())
 
@@ -422,4 +427,4 @@ async def health():
     return {"status": "healthy"}
 
 if __name__ == "__main__":
-    uvicorn.run("backend:app", host="0.0.0.0", port=8000)
+    uvicorn.run("backend:app", host=config.backend.HOST, port=config.backend.PORT)
