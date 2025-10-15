@@ -87,7 +87,7 @@ def update_email_state(email: EmailModel, tool_context: ToolContext):
         email: 
             subject: Subject line of the email
             body: Body of the email
-            recipients: List of valid email address of recipients
+            email_recipients: List of valid email address of recipients
         tool_context: Context for accessing and updating session state.
 
     Returns:
@@ -128,7 +128,7 @@ def create_calendar_invitation(
     description: str = "",
     attendees: Optional[List[str]] = None,
     organizer_email: Optional[str] = None,
-    output_path: str = "invitation.ics"
+    output_path: str = "generated/invitation.ics"
 ) -> str:
     """
     Create a calendar invitation file in iCalendar format (.ics).
@@ -141,7 +141,7 @@ def create_calendar_invitation(
         description: Event description/notes (optional)
         attendees: List of attendee email addresses (optional)
         organizer_email: Organizer email address (defaults to EMAIL_HOST_USER)
-        output_path: Path where the .ics file will be saved (default: "invitation.ics")
+        output_path: Path where the .ics file will be saved (default: "generated/invitation.ics")
 
     Returns:
         Success message with file path or error message

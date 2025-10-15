@@ -18,7 +18,7 @@ class InvitationInfo(BaseModel):
 class EmailModel(BaseModel):
     subject: str = ""
     body: str = ""
-    recipients: list[str] = []
+    email_recipients: list[str] = []
 
 class ChatRequest(BaseModel):
     message: str
