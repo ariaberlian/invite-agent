@@ -36,10 +36,12 @@ root_agent = Agent(
 
         MCPToolset(
             connection_params=SseConnectionParams(
-                url="http://localhost:8000/sse",  # SSE endpoint (port 8081, WhatsApp bridge uses 8080)
-                timeout=5.0,  # Connection timeout
-                sse_read_timeout=300.0,  # 5 minutes read timeout (default is already 5 minutes)
+                url="http://localhost:8000/sse",
+                timeout=5.0,
+                sse_read_timeout=300.0,
             ),
+            tool_filter=['search_contacts', 'send_messages']
+        
         )
     ],
 )
