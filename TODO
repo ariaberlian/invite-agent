@@ -25,9 +25,9 @@
 [x] Add calendar tools
 [x] Release ver 1.1
 [x] Try whatsapp bussiness mcp
-[ ] Filter whatsapp mcp tools
-[ ] Create whatsapp agent prompts
-[ ] Give whatsapp agent a state
-[ ] Try all workflows
+[x] Filter whatsapp mcp tools
+[x] Create whatsapp agent prompts
+[x] Give whatsapp agent a state
+[x] Try all workflows
 [ ] Docker it all
 [ ] Try all workflows

@@ -52,14 +52,14 @@ class BackendConfig:
     """Backend API configuration"""
     APP_NAME: str = os.getenv("APP_NAME", "Invitation Assistant")
     HOST: str = os.getenv("BACKEND_HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("BACKEND_PORT", "8000"))
+    PORT: int = int(os.getenv("BACKEND_PORT", "8001"))
 
 
 class FrontendConfig:
     """Frontend UI configuration"""
-    BACKEND_URL: str = os.getenv("BACKEND_URL", "http://localhost:8000")
+    BACKEND_URL: str = os.getenv("BACKEND_URL", "http://localhost:8001")
     HOST: str = os.getenv("FRONTEND_HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("FRONTEND_PORT", "8001"))
+    PORT: int = int(os.getenv("FRONTEND_PORT", "8002"))
     SHARE: bool = os.getenv("FRONTEND_SHARE", "false").lower() == "true"
 
 
